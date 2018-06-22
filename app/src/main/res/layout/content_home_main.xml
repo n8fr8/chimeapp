@@ -18,6 +18,7 @@
         android:clipToPadding="false"
         android:scrollbars="vertical"
         android:visibility="gone"
+        android:layout_marginBottom="48dp"
         />
 
     <TextView

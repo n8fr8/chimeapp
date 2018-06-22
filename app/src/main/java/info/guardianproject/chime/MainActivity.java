@@ -4,12 +4,17 @@ import android.app.ActionBar;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -21,21 +26,35 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.MonitorNotifier;
+import org.altbeacon.beacon.Region;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import info.guardianproject.chime.db.ChimeAdapter;
 import info.guardianproject.chime.db.ChimeEventAdapter;
+import info.guardianproject.chime.geo.GeoManager;
 import info.guardianproject.chime.model.Chime;
 import info.guardianproject.chime.model.ChimeEvent;
+import info.guardianproject.chime.service.ChimeNotifier;
+import info.guardianproject.chime.service.WifiJobService;
+import info.guardianproject.chime.service.WifiReceiver;
 
-public class MainActivity extends AppCompatActivity {
+import static android.net.wifi.WifiManager.WIFI_STATE_CHANGED_ACTION;
+
+public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
     private SwipeRefreshLayout refreshLayout;
+    private BottomNavigationView navigation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
@@ -55,8 +74,18 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (hasPermissions())
-                    showHomeList();
+
+                if (hasPermissions()) {
+
+                    listenForChimes();
+
+                    if (navigation.getSelectedItemId() == R.id.navigation_home)
+                        showHomeList();
+                    else if (navigation.getSelectedItemId() == R.id.navigation_dashboard)
+                        showDashboardList();
+                    else
+                        showChimeEventList();
+                }
 
                 refreshLayout.setRefreshing(false);
             }
@@ -81,11 +110,18 @@ public class MainActivity extends AppCompatActivity {
 
         showHomeList();
 
+        wifiReceiver = new WifiReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        registerReceiver(wifiReceiver,intentFilter);
+
+        new ChimeNotifier(this).clearAll();
     }
+
+    WifiReceiver wifiReceiver;
 
     ChimeAdapter chimeAdapter;
     ChimeEventAdapter chimeEventAdapter;
-
     RecyclerView recyclerView;
 
     @Override
@@ -93,6 +129,11 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
 
         chimeAdapter.onDestroy();
+        beaconManager.unbind(this);
+
+        GeoManager.disconnect();
+
+        unregisterReceiver(wifiReceiver);
     }
 
     private List<Chime> chimeList;
@@ -113,29 +154,6 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setLayoutManager(mLayoutManager);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setAdapter(chimeAdapter);
-
-            ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-                @Override
-                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                    return false;
-                }
-
-                @Override
-                public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-
-                    chimeList.remove(viewHolder.getAdapterPosition());
-                    chimeAdapter.notifyDataSetChanged();
-                }
-
-                @Override
-                public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
-                    super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
-                }
-            };
-
-            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-            itemTouchHelper.attachToRecyclerView(recyclerView);
         }
         else
         {
@@ -169,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     private void showChimeEventList ()
     {
         List<ChimeEvent> chimeEventList = ChimeEvent.listAll(ChimeEvent.class);
-        chimeEventAdapter = new ChimeEventAdapter(this, chimeEventList, R.layout.layout_card_small);
+        chimeEventAdapter = new ChimeEventAdapter(this, chimeEventList, R.layout.layout_card_event_small);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
@@ -194,6 +212,10 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.menu_add_chime:
                 addNewChime();
+                return true;
+
+            case R.id.menu_scan:
+                listenForChimes();
                 return true;
         }
 
@@ -258,4 +280,92 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private BeaconManager beaconManager;
+
+    private void initBeaconSupport ()
+    {
+        beaconManager = BeaconManager.getInstanceForApplication(this);
+        // To detect proprietary beacons, you must add a line like below corresponding to your beacon
+        // type.  Do a web search for "setBeaconLayout" to get the proper expression.
+        // beaconManager.getBeaconParsers().add(new BeaconParser().
+        //        setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+        beaconManager.bind(this);
+
+
+    }
+
+    @Override
+    public void onBeaconServiceConnect() {
+
+        Snackbar snackbar = Snackbar.make(recyclerView, R.string.status_beacons,Snackbar.LENGTH_LONG);
+        snackbar.show();
+
+        beaconManager.addMonitorNotifier(new MonitorNotifier() {
+            @Override
+            public void didEnterRegion(Region region) {
+              //  Log.i(TAG, "I just saw an beacon for the first time!");
+
+                String[] args = {region.getBluetoothAddress()};
+                List<Chime> chimes = Chime.find(Chime.class,"ssid = ?",args);
+                if (chimes.size() == 0)
+                {
+                    Chime chime = new Chime();
+
+                    chime.name = region.getBluetoothAddress();
+                    chime.lastSeen = new Date();
+                    chime.isNearby = true;
+                    chime.ssid = region.getBluetoothAddress();
+                    chime.serviceType = "altbeacon";
+                    chime.chimeId = region.getUniqueId();
+
+                    if (region.getId1() != null)
+                    {
+                        chime.serviceUri = region.getId1().toString();
+                    }
+
+                    chime.save();
+
+                    ChimeEvent event = new ChimeEvent();
+                    event.type = ChimeEvent.TYPE_FOUND_NEW_CHIME;
+                    event.happened = chime.lastSeen;
+                    event.description = getString(R.string.status_beacon_found);
+                    event.chimeId = chime.getId()+"";
+                    event.save();
+
+                    showHomeList();
+                }
+            }
+
+            @Override
+            public void didExitRegion(Region region) {
+             //   Log.i(TAG, "I no longer see an beacon");
+                String[] args = {region.getBluetoothAddress()};
+                List<Chime> chimes = Chime.find(Chime.class,"ssid = ?",args);
+                for (Chime chime : chimes)
+                {
+                    chime.isNearby = false;
+                    chime.lastSeen = new Date();
+                    chime.save();
+                }
+            }
+
+            @Override
+            public void didDetermineStateForRegion(int state, Region region) {
+             //   Log.i(TAG, "I have just switched from seeing/not seeing beacons: "+state);
+            }
+        });
+
+        try {
+            beaconManager.startMonitoringBeaconsInRegion(new Region("chime1", null, null, null));
+        } catch (RemoteException e) {    }
+    }
+
+    private void listenForChimes ()
+    {
+        initBeaconSupport();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            WifiJobService.initJob(this);
+        }
+    }
 }

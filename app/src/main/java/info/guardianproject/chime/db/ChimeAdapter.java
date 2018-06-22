@@ -3,8 +3,10 @@ package info.guardianproject.chime.db;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v4.app.ActivityCompat;
@@ -15,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mapzen.android.lost.api.LocationListener;
@@ -28,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import info.guardianproject.chime.geo.GeoManager;
 import info.guardianproject.chime.model.Chime;
 import info.guardianproject.chime.R;
 import info.guardianproject.chime.util.DistanceFormatter;
@@ -40,6 +44,7 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView title, location, wifi_ssid, service_uri;
+        public ImageView ivShare, ivMap, ivConnect;
 
         public MyViewHolder(View view) {
             super(view);
@@ -47,6 +52,10 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
             location = (TextView) view.findViewById(R.id.card_location);
             wifi_ssid = (TextView) view.findViewById(R.id.card_wifi_ssid);
             service_uri = (TextView) view.findViewById(R.id.card_service_uri);
+            ivShare = view.findViewById(R.id.action_share);
+            ivMap = view.findViewById(R.id.action_map);
+            ivConnect = view.findViewById(R.id.action_connect);
+
 
         }
     }
@@ -57,13 +66,11 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
         this.chimeList = chimeList;
         this.chimeLayout = chimeLayout;
 
-        initLocation(context);
+        GeoManager.initLocation(context);
         getWifiInfo(context);
     }
 
     public void onDestroy() {
-        if (lostApiClient != null && lostApiClient.isConnected())
-            lostApiClient.disconnect();
     }
 
 
@@ -77,7 +84,7 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
 
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
-        Chime chime = chimeList.get(position);
+        final Chime chime = chimeList.get(position);
         holder.title.setText(chime.name);
 
         if (holder.location != null) {
@@ -93,12 +100,17 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
                 }
 
                 float distanceInMeters = getDistanceInMeters(chime);
-                if (distanceInMeters >= 0) {
+                if (distanceInMeters > 0) {
                     holder.location.setText(DistanceFormatter.format((int)distanceInMeters) + ' ' + mContext.getString(R.string.distance_away));
+                }
+                else
+                {
+                    holder.location.setText(mContext.getString(R.string.status_here));
                 }
 
             } else {
 
+                holder.location.setText("");
                 holder.location.setVisibility(View.GONE);
                 chime.isNearby = false;
             }
@@ -108,13 +120,28 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
             if (holder.wifi_ssid != null) {
                 holder.wifi_ssid.setText(chime.ssid);
 
+                holder.ivConnect.setVisibility(View.VISIBLE);
+
                 if (lastWifiInfo != null && chime.ssid.equals(lastWifiInfo.getSSID())) {
                     //show wifi connected icon
                     chime.isNearby = true;
                     chime.lastSeen = new Date();
+
+                    holder.ivConnect.setColorFilter(R.color.colorActive);
+
+                }
+                else
+                {
+                    holder.ivConnect.clearColorFilter();
                 }
 
             }
+        }
+        else
+        {
+            if (holder.ivConnect != null)
+                holder.ivConnect.setVisibility(View.GONE);
+
         }
 
         if (holder.service_uri != null)
@@ -128,6 +155,48 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
             // Set a random height for TextView
             holder.title.getLayoutParams().height = getRandomIntInRange(300, 100);
 
+        }
+
+        if (holder.ivShare != null)
+        {
+            holder.ivShare.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+
+                    Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+                    sharingIntent.setType("text/plain");
+                    String ShareSub = mContext.getString(R.string.label_share_chime);
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, ShareSub);
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, chime.getUri());
+                    mContext.startActivity(Intent.createChooser(sharingIntent, ShareSub));
+                }
+            });
+        }
+
+        if (holder.ivMap != null)
+        {
+            holder.ivMap.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String uri = "geo:" + chime.latitude + ","
+                            +chime.longitude + "?q=" + chime.latitude
+                            + "," + chime.longitude;
+                    mContext.startActivity(new Intent(android.content.Intent.ACTION_VIEW,
+                            Uri.parse(uri)));
+                }
+            });
+        }
+
+        if (holder.ivConnect != null)
+        {
+            holder.ivConnect.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+
+                }
+            });
         }
 
         // loading album cover using Glide library
@@ -192,55 +261,11 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
         return chimeList.size();
     }
 
-    static LostApiClient lostApiClient;
-    static Location lastLocation;
-    static WifiInfo lastWifiInfo;
-
-    public void initLocation(final Context context) {
-
-        if (lostApiClient == null || (!lostApiClient.isConnected())) {
-            lostApiClient = new LostApiClient.Builder(context).addConnectionCallbacks(new LostApiClient.ConnectionCallbacks() {
-                @Override
-                public void onConnected() {
-                    getCurrentLocation(context);
-                }
-
-                @Override
-                public void onConnectionSuspended() {
-
-                }
-            }).build();
-
-            lostApiClient.connect();
-        }
-    }
-
-    private static void getCurrentLocation(Context context) {
-
-        LocationRequest request = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
-                .setInterval(5000)
-                .setSmallestDisplacement(10);
-
-        LocationListener listener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                // Do stuff
-
-                lastLocation = location;
-            }
-        };
-
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(lostApiClient, request, listener);
-    }
 
     private boolean isNearby (Chime chime)
     {
+        Location lastLocation = GeoManager.getLastLocation();
+
         if (lastLocation != null) {
             float[] results = new float[1];
             Location.distanceBetween(lastLocation.getLatitude(), lastLocation.getLongitude(), chime.latitude, chime.longitude, results);
@@ -254,6 +279,8 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
 
     private float getDistanceInMeters (Chime chime)
     {
+        Location lastLocation = GeoManager.getLastLocation();
+
         if (lastLocation != null) {
             float[] results = new float[1];
             Location.distanceBetween(lastLocation.getLatitude(), lastLocation.getLongitude(), chime.latitude, chime.longitude, results);
@@ -263,6 +290,8 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
 
         return -1;
     }
+
+    static WifiInfo lastWifiInfo;
 
     private static void getWifiInfo(Context context) {
         final WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);

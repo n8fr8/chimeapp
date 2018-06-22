@@ -2,9 +2,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_add_chime"
         android:icon="@drawable/baseline_add_white_18dp"
         android:title="@string/action_new_chime"
-        app:showAsAction="always|collapseActionView"
-        />
+        app:showAsAction="always"
+        >
+
+        <menu>
+            <item
+                android:id="@+id/menu_add_chime"
+                android:icon="@drawable/baseline_add_white_18dp"
+                android:title="@string/action_new_chime"
+                app:showAsAction="always"
+                />
+            <item
+                android:id="@+id/menu_scan"
+                android:icon="@drawable/ic_nearby_white"
+                android:title="@string/action_scan"
+                app:showAsAction="always"
+                />
+
+        </menu>
+    </item>
 </menu>

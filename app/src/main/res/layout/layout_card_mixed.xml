@@ -12,11 +12,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/tools"
     >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
+        >
 <LinearLayout
+    android:id="@+id/infoview"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:background="@color/colorPrimaryDark"
     android:padding="6dp"
     android:orientation="vertical">
     <TextView
@@ -36,4 +41,33 @@
         android:textColor="@color/primaryLight"
         />
 </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="6dp"
+        android:layout_below="@+id/infoview"
+        android:orientation="horizontal"
+        android:gravity="right"
+        >
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_share"
+            android:tint="@color/primaryLight"
+            android:layout_margin="6dp"
+            android:id="@+id/action_share"
+            />
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_location_search"
+            android:tint="@color/primaryLight"
+            android:layout_margin="6dp"
+            android:id="@+id/action_connect"
+            />
+
+    </LinearLayout>
+    </RelativeLayout>
 </android.support.v7.widget.CardView>

@@ -32,6 +32,7 @@ import java.util.Date;
 import ernestoyaquello.com.verticalstepperform.VerticalStepperFormLayout;
 import ernestoyaquello.com.verticalstepperform.interfaces.VerticalStepperForm;
 import info.guardianproject.chime.model.Chime;
+import info.guardianproject.chime.model.ChimeEvent;
 
 public class AddNewChimeActivity extends AppCompatActivity implements VerticalStepperForm {
 
@@ -70,6 +71,44 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
 
         initLocation();
         getWifiInfo();
+
+        checkIntent();
+    }
+
+    private void checkIntent ()
+    {
+        Intent intent = getIntent();
+
+        if (intent != null)
+        {
+            Chime chime = null;
+
+            if (intent.getDataString() != null)
+            {
+                chime = Chime.parseUri(intent.getDataString());
+            }
+            else if (intent.hasExtra(Intent.EXTRA_TEXT))
+            {
+                chime = Chime.parseUri(intent.getStringExtra(Intent.EXTRA_TEXT));
+            }
+
+            if (chime != null)
+            {
+                if (!TextUtils.isEmpty(chime.ssid))
+                    etNetwork.setText(chime.ssid);
+
+                if (chime.latitude > 0 || chime.longitude > 0)
+                    etLocation.setText(chime.latitude + "," + chime.longitude);
+
+                if (!TextUtils.isEmpty(chime.serviceUri))
+                    etService.setText(chime.serviceUri);
+
+                if (!TextUtils.isEmpty(chime.name))
+                    etName.setText(chime.name);
+
+            }
+
+        }
     }
 
     @Override
@@ -234,7 +273,7 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
         }
 
         if (etNetwork.length() > 0) {
-            chime.ssid = etNetwork.getText().toString();
+            chime.ssid = etNetwork.getText().toString().replace("\"","");
 
             if (lastWifiInfo != null)
              if (chime.ssid.equals(lastWifiInfo.getSSID()))
@@ -267,6 +306,13 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
         chime.lastSeen = new Date();
         chime.isNearby = true;
         chime.save();
+        ChimeEvent event = new ChimeEvent();
+        event.type = ChimeEvent.TYPE_ADDED_CHIME;
+        event.happened = chime.lastSeen;
+        event.description = getString(R.string.status_added_chime);
+        event.chimeId = chime.getId()+"";
+        event.save();
+
 
         finish();
     }

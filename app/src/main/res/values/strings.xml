@@ -17,4 +17,14 @@
     <string name="form_hint_service">link or address for the service to use</string>
     <string name="no_nearby_chimes">No nearby chimes...</string>
     <string name="distance_away">away</string>
+    <string name="status_beacons">Listening for chimes...</string>
+    <string name="action_scan">Listen nearby</string>
+    <string name="action_heard_known_chime">Heard a known chime...</string>
+    <string name="action_heard_new_chime">Heard a *new* chime...</string>
+    <string name="action_added_chime">Added a chime...</string>
+    <string name="status_beacon_found">Detected a beacon nearby!</string>
+    <string name="status_added_chime">Logged a chime by hand...</string>
+    <string name="channel_description">Let\'s you know about nearby chimes</string>
+    <string name="status_here">Here!</string>
+    <string name="label_share_chime">Share chime via</string>
 </resources>

@@ -1,7 +1,10 @@
 package info.guardianproject.chime.service;
 
+import android.app.job.JobInfo;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.app.job.JobService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
@@ -10,6 +13,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
+
+import java.util.Date;
+import java.util.List;
+
+import info.guardianproject.chime.model.Chime;
+import info.guardianproject.chime.model.ChimeEvent;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class WifiJobService extends JobService {
@@ -18,9 +28,6 @@ public class WifiJobService extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         new JobTask(this).execute(jobParameters);
-
-      //  startService(new Intent(this, PublishService.class));
-
 
         return true;
     }
@@ -40,7 +47,7 @@ public class WifiJobService extends JobService {
         @Override
         protected JobParameters doInBackground(JobParameters... params) {
 
-            getWifiInfo();
+            startService(new Intent(getApplicationContext(),WifiReceiver.WifiActiveService.class));
 
             return params[0];
         }
@@ -52,15 +59,27 @@ public class WifiJobService extends JobService {
 
     }
 
+    public static final int MY_BACKGROUND_JOB = 0;
 
-    private void getWifiInfo() {
-        final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+    public static void initJob(Context context) {
 
-        WifiInfo info = wifiManager.getConnectionInfo();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
 
-        String mac = info.getMacAddress();
-        String ssid = info.getSSID();
-        String bssid = info.getBSSID();
+            JobScheduler js = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+            JobInfo job = new JobInfo.Builder(
+                    MY_BACKGROUND_JOB,
+                    new ComponentName(context, WifiJobService.class))
+                    .setPersisted(true)
+                    .setPeriodic(MIN_INTERVAL)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                    .setRequiresCharging(false)
+                    .build();
+            js.schedule(job);
+        }
     }
+
+    private final static int MIN_INTERVAL = 15 * 60000; //15 minutes
+
 }
 

@@ -8,11 +8,19 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
+
+import java.util.Date;
+import java.util.List;
+
+import info.guardianproject.chime.model.Chime;
+import info.guardianproject.chime.model.ChimeEvent;
 
 /**
  * Receives wifi changes and creates a notification when wifi connects to a network,
@@ -35,6 +43,15 @@ public class WifiReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
+
+        if(intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)){
+            NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+            boolean connected = info.isConnected();
+
+            context.startService(new Intent(context, WifiActiveService.class));
+            //call your method
+        }
+
         int wifiState = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, -1);
         if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(intent.getAction())
                 && WifiManager.WIFI_STATE_ENABLED == wifiState) {
@@ -70,7 +87,7 @@ public class WifiReceiver extends BroadcastReceiver {
                     String ssid = info.getSSID();
                     String bssid = info.getBSSID();
 
-                    createNotification(ssid, mac);
+                    createNotification(ssid, mac,bssid);
                     stopSelf();
                 }
             }, 5000);
@@ -85,28 +102,49 @@ public class WifiReceiver extends BroadcastReceiver {
         /**
          * Creates a notification displaying the SSID & MAC addr
          */
-        private void createNotification(String ssid, String mac) {
+        private void createNotification(String ssid, String mac, String bssid) {
+
+            String[] args = {ssid};
+            List<Chime> chimes = Chime.find(Chime.class,"ssid = ?",args);
+            for (Chime chime : chimes)
+            {
+                if (!TextUtils.isEmpty(chime.bssid))
+                {
+                    if (!bssid.equals(chime.bssid))
+                        continue;
+                }
+
+                chime.isNearby = true;
+                chime.lastSeen = new Date();
+                chime.save();
+
+                Date now = new Date();
+
+                //clear previous chime events for this chime
+                String[] eventArgs = {chime.getId()+""};
+                List<ChimeEvent> events = ChimeEvent.find(ChimeEvent.class, "chime_id = ?",eventArgs);
+                for (ChimeEvent cevent : events) {
+
+                    if (now.getTime() - cevent.happened.getTime() < EVENT_MIN_INTERVAL)
+                        return;
+
+                    cevent.delete();
+                }
+
+                ChimeEvent event = new ChimeEvent();
+                event.chimeId = chime.getId()+"";
+                event.type = ChimeEvent.TYPE_HEARD_KNOWN_CHIME;
+                event.happened = now;
+                event.description = chime.name;
+                event.save();
+
+                new ChimeNotifier(this).notify(event, chime);
+            }
 
 
         }
     }
 
-    public static final int MY_BACKGROUND_JOB = 0;
+    private final static long EVENT_MIN_INTERVAL = 60 * 60000; //1 hours
 
-    public static void scheduleJob(Context context) {
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-
-            JobScheduler js = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-
-            JobInfo job = new JobInfo.Builder(
-                    MY_BACKGROUND_JOB,
-                    new ComponentName(context, WifiJobService.class))
-                    .setPersisted(true)
-                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                    .setRequiresCharging(false)
-                    .build();
-            js.schedule(job);
-        }
-    }
 }
