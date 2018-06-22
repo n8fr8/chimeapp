@@ -8,7 +8,6 @@
     tools:context=".MainActivity">
 
     <include
-        android:id="@+id/home_main"
         layout="@layout/content_home_main" />
 
     <android.support.design.widget.BottomNavigationView

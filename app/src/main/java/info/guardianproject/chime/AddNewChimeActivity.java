@@ -235,10 +235,33 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
 
         if (etNetwork.length() > 0) {
             chime.ssid = etNetwork.getText().toString();
+
+            if (lastWifiInfo != null)
+             if (chime.ssid.equals(lastWifiInfo.getSSID()))
+             {
+                 chime.bssid = lastWifiInfo.getBSSID();
+             }
         }
 
         if (etService.length() > 0) {
             chime.serviceUri = etService.getText().toString();
+
+            if (chime.serviceUri.contains("fdroid")) {
+                chime.serviceType = "fdroid";
+                chime.servicePackage = "org.fdroid.fdroid";
+            }
+            else if (chime.serviceUri.contains("librarybox")) {
+                chime.serviceType = "www";
+            }
+            else if (chime.serviceUri.contains("piratebox")) {
+                chime.serviceType = "www";
+            }
+            else if (chime.serviceUri.contains("upload")) {
+                chime.serviceType = "report";
+                chime.servicePackage = "net.opendasharchive.openarchive";
+
+            }
+
         }
 
         chime.lastSeen = new Date();
@@ -343,18 +366,18 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
         LocationServices.FusedLocationApi.requestLocationUpdates(lostApiClient, request, listener);
     }
 
-    WifiInfo info;
+    WifiInfo lastWifiInfo;
 
     private void getWifiInfo() {
         final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         if (wifiManager.isWifiEnabled()) {
-            info = wifiManager.getConnectionInfo();
+            lastWifiInfo = wifiManager.getConnectionInfo();
 
-            if (info != null) {
-                String mac = info.getMacAddress();
-                String ssid = info.getSSID();
-                String bssid = info.getBSSID();
+            if (lastWifiInfo != null) {
+                String mac = lastWifiInfo.getMacAddress();
+                String ssid = lastWifiInfo.getSSID();
+                String bssid = lastWifiInfo.getBSSID();
 
                 etNetwork.setText(ssid);
             }

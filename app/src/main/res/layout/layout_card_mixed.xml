@@ -18,14 +18,22 @@
     android:layout_gravity="center"
     android:background="@color/colorPrimaryDark"
     android:padding="6dp"
-    >
+    android:orientation="vertical">
     <TextView
         android:id="@+id/card_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/primaryLight"
-        android:layout_gravity="center"
-        android:text="hello"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+
+        />
+
+    <TextView
+        android:id="@+id/card_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/primaryLight"
         />
 </LinearLayout>
 </android.support.v7.widget.CardView>

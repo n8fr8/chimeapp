@@ -15,4 +15,6 @@
     <string name="form_label_service">Service</string>
     <string name="form_hint_network">wifi network the chime is for</string>
     <string name="form_hint_service">link or address for the service to use</string>
+    <string name="no_nearby_chimes">No nearby chimes...</string>
+    <string name="distance_away">away</string>
 </resources>

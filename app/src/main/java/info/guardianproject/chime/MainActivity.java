@@ -13,14 +13,17 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,8 @@ import info.guardianproject.chime.model.Chime;
 import info.guardianproject.chime.model.ChimeEvent;
 
 public class MainActivity extends AppCompatActivity {
+
+    private SwipeRefreshLayout refreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +51,17 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
+        refreshLayout = (SwipeRefreshLayout)findViewById(R.id.swipe_layout);
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if (hasPermissions())
+                    showHomeList();
+
+                refreshLayout.setRefreshing(false);
+            }
+        });
+
         List<Chime> chimeList = Chime.listAll(Chime.class);
 
         if (chimeList.size() == 0)
@@ -56,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             if (hasPermissions())
                 showHomeList();
         }
+
     }
 
     @Override
@@ -63,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         showHomeList();
+
     }
 
     ChimeAdapter chimeAdapter;
@@ -70,39 +88,82 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        chimeAdapter.onDestroy();
+    }
+
+    private List<Chime> chimeList;
+
     private void showHomeList ()
     {
 
         String[] args = {"1"};
-        List<Chime> chimeList =  Chime.find(Chime.class,"is_nearby = ?",args,null,"last_seen DESC",null);
+        chimeList =  Chime.find(Chime.class,"is_nearby = ?",args,null,"last_seen DESC",null);
 
-        chimeAdapter = new ChimeAdapter(this, chimeList, R.layout.layout_card_large);
+        if (chimeList.size() > 0) {
+            recyclerView.setVisibility(View.VISIBLE);
+            findViewById(R.id.empty_view).setVisibility(View.GONE);
 
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(chimeAdapter);
+            chimeAdapter = new ChimeAdapter(this, chimeList, R.layout.layout_card_large);
 
-        /**
-         * float[] results = new float[1];
-         Location.distanceBetween(centerLatitude, centerLongitude, testLatitude, testLongitude, results);
-         float distanceInMeters = results[0];
-         boolean isWithin10km = distanceInMeters < 10000;
-         */
+            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+            recyclerView.setLayoutManager(mLayoutManager);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(chimeAdapter);
 
-      //  chimeAdapter.notifyDataSetChanged();
+            ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+                @Override
+                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                    return false;
+                }
+
+                @Override
+                public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+
+                    chimeList.remove(viewHolder.getAdapterPosition());
+                    chimeAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
+                    super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
+                }
+            };
+
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+            itemTouchHelper.attachToRecyclerView(recyclerView);
+        }
+        else
+        {
+            recyclerView.setVisibility(View.GONE);
+        }
     }
+
+    List<Chime> chimeDashList;
+    ChimeAdapter chimeDashAdapter;
 
     private void showDashboardList ()
     {
-        List<Chime> chimeList = Chime.listAll(Chime.class);
-        chimeAdapter = new ChimeAdapter(this, chimeList, R.layout.layout_card_mixed);
+        chimeDashList = Chime.listAll(Chime.class);
+        chimeDashList =  Chime.find(Chime.class,null,null,null,"last_seen DESC",null);
 
-        RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(chimeAdapter);
+        if (chimeDashList.size() > 0) {
 
+            recyclerView.setVisibility(View.VISIBLE);
+
+            chimeDashAdapter = new ChimeAdapter(this, chimeDashList, R.layout.layout_card_mixed);
+
+            RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+            recyclerView.setLayoutManager(mLayoutManager);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(chimeDashAdapter);
+
+
+        }
     }
 
     private void showChimeEventList ()
