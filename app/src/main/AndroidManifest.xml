@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="info.guardianproject.pinwheel">
+    package="info.guardianproject.chime">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -15,7 +15,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name="com.orm.SugarApp"
+        >
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -37,6 +39,9 @@
                     android:scheme="wcdp" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".OnboardingActivity"
+            />
         <service android:name=".GeoFenceIntentService" android:exported="false" />
 
         <service android:name=".service.WifiJobService"
@@ -48,6 +53,12 @@
                </intent-filter>
              </receiver>
          <service android:name=".service.WifiReceiver$WifiActiveService" android:exported="false" />
+
+        <meta-data android:name="DATABASE" android:value="chime.db" />
+        <meta-data android:name="VERSION" android:value="1" />
+        <meta-data android:name="QUERY_LOG" android:value="true" />
+        <meta-data android:name="DOMAIN_PACKAGE_NAME" android:value="info.guardianproject.chime" />
+
     </application>
 
 </manifest>

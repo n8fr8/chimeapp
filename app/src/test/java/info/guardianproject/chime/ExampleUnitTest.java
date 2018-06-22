@@ -1,4 +1,4 @@
-package info.guardianproject.pinwheel;
+package info.guardianproject.chime;
 
 import org.junit.Test;
 

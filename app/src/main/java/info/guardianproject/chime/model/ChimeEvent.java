@@ -1,8 +1,12 @@
-package info.guardianproject.pinwheel.model;
+package info.guardianproject.chime.model;
+
+import com.orm.SugarRecord;
 
 import java.util.Date;
 
-public class Notification {
+public class ChimeEvent extends SugarRecord {
+
+    public ChimeEvent () {}
 
     public String chimeId;
     public Date happened;

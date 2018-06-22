@@ -1,38 +1,24 @@
-package info.guardianproject.pinwheel;
+package info.guardianproject.chime;
 
-import android.Manifest;
 import android.app.ActionBar;
-import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.drawable.AnimationDrawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.MenuItem;
-import android.widget.TextView;
-
-import com.mapzen.android.lost.api.Geofence;
-import com.mapzen.android.lost.api.GeofencingRequest;
-import com.mapzen.android.lost.api.LocationListener;
-import com.mapzen.android.lost.api.LocationRequest;
-import com.mapzen.android.lost.api.LocationServices;
-import com.mapzen.android.lost.api.LostApiClient;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import info.guardianproject.pinwheel.db.ChimeAdapter;
-import info.guardianproject.pinwheel.model.Chime;
-
-import static com.mapzen.android.lost.api.Geofence.NEVER_EXPIRE;
+import info.guardianproject.chime.db.ChimeAdapter;
+import info.guardianproject.chime.db.ChimeEventAdapter;
+import info.guardianproject.chime.model.Chime;
+import info.guardianproject.chime.model.ChimeEvent;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,15 +29,13 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-//                    mTextMessage.setText(R.string.title_home);
                     showHomeList();
                     return true;
                 case R.id.navigation_dashboard:
-  //                  mTextMessage.setText(R.string.title_dashboard);
                     showDashboardList();
                     return true;
                 case R.id.navigation_notifications:
-    //                mTextMessage.setText(R.string.title_notifications);
+                    showChimeEventList();
                     return true;
             }
             return false;
@@ -72,16 +56,24 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-        showHomeList ();
+        List<Chime> chimeList = Chime.listAll(Chime.class);
+
+        if (chimeList.size() == 0)
+        {
+            startActivity(new Intent(this,OnboardingActivity.class));
+        }
+        else
+            showHomeList ();
     }
 
-    ArrayList<Chime> chimeList;
     ChimeAdapter chimeAdapter;
+    ChimeEventAdapter chimeEventAdapter;
+
     RecyclerView recyclerView;
 
     private void showHomeList ()
     {
-        chimeList = new ArrayList<>();
+        List<Chime> chimeList = Chime.listAll(Chime.class);
         chimeAdapter = new ChimeAdapter(this, chimeList, R.layout.layout_card_large);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
@@ -89,16 +81,12 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(chimeAdapter);
 
-        Chime chime = new Chime();
-        chime.name = "This is a RECENT chime";
-
-        chimeList.add(chime);
-        chimeAdapter.notifyDataSetChanged();
+      //  chimeAdapter.notifyDataSetChanged();
     }
 
     private void showDashboardList ()
     {
-        chimeList = new ArrayList<>();
+        List<Chime> chimeList = Chime.listAll(Chime.class);
         chimeAdapter = new ChimeAdapter(this, chimeList, R.layout.layout_card_mixed);
 
         RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(2,StaggeredGridLayoutManager.VERTICAL);
@@ -106,14 +94,20 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(chimeAdapter);
 
-        for (int i = 0; i < 30; i++) {
-            Chime chime = new Chime();
-            chime.name = "This is a chime " + i;
-            chimeList.add(chime);
-        }
-
-        chimeAdapter.notifyDataSetChanged();
     }
+
+    private void showChimeEventList ()
+    {
+        List<ChimeEvent> chimeEventList = ChimeEvent.listAll(ChimeEvent.class);
+        chimeEventAdapter = new ChimeEventAdapter(this, chimeEventList, R.layout.layout_card_small);
+
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(chimeEventAdapter);
+
+    }
+
 
     /**
     public void onWindowFocusChanged(boolean hasFocus) {

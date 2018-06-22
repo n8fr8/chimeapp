@@ -17,7 +17,7 @@
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:background="@color/colorPrimaryDark"
-
+    android:padding="6dp"
     >
     <TextView
         android:id="@+id/card_title"

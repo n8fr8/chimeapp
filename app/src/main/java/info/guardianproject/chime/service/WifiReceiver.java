@@ -1,4 +1,4 @@
-package info.guardianproject.pinwheel.service;
+package info.guardianproject.chime.service;
 
 
 import android.app.Service;

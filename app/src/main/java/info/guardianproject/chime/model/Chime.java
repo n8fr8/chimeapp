@@ -1,8 +1,12 @@
-package info.guardianproject.pinwheel.model;
+package info.guardianproject.chime.model;
+
+import com.orm.SugarRecord;
 
 import java.util.Date;
 
-public class Chime {
+public class Chime extends SugarRecord {
+
+    public Chime () {}
 
     public String name;
     public String chimeId;

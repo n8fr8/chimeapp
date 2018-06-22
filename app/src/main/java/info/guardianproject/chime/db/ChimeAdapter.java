@@ -1,4 +1,4 @@
-package info.guardianproject.pinwheel.db;
+package info.guardianproject.chime.db;
 
 
 import android.content.Context;
@@ -13,8 +13,8 @@ import android.widget.TextView;
 import java.util.List;
 import java.util.Random;
 
-import info.guardianproject.pinwheel.R;
-import info.guardianproject.pinwheel.model.Chime;
+import info.guardianproject.chime.model.Chime;
+import info.guardianproject.chime.R;
 
 public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder> {
 
