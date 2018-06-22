@@ -41,7 +41,6 @@ public class GeoFenceIntentService extends IntentService {
             @Override
             public void onConnected() {
                 locationTest();
-                geofenceTest();
             }
 
             @Override
@@ -81,15 +80,11 @@ public class GeoFenceIntentService extends IntentService {
         LocationServices.FusedLocationApi.requestLocationUpdates(lostApiClient, request, listener);
     }
 
-    private void geofenceTest() {
-        String requestId = "test1";
-        double lat = 30.0;
-        double lon = 31.0;
-        float rad = 10;
+    private void addGeofence(String requestId, double lat, double lon, float radius) {
 
         Geofence geofence = new Geofence.Builder()
                 .setRequestId(requestId)
-                .setCircularRegion(lat, lon, rad)
+                .setCircularRegion(lat, lon, radius)
                 .setExpirationDuration(NEVER_EXPIRE)
                 .build();
 
