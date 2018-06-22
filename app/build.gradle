@@ -39,4 +39,6 @@ dependencies {
     //try this onboarding
     implementation 'com.codemybrainsout.onboarding:onboarder:1.0.4'
 
+    //for nice step forms
+    implementation 'com.ernestoyaquello.stepperform:vertical-stepper-form:0.9.9'
 }

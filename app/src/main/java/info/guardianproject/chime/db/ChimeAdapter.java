@@ -4,6 +4,7 @@ package info.guardianproject.chime.db;
 import android.content.Context;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,11 +24,13 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
     private int chimeLayout;
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView title;
+        public TextView title,location,wifi_ssid;
 
         public MyViewHolder(View view) {
             super(view);
             title = (TextView) view.findViewById(R.id.card_title);
+            location = (TextView) view.findViewById(R.id.card_location);
+            wifi_ssid = (TextView) view.findViewById(R.id.card_wifi_ssid);
         }
     }
 
@@ -51,12 +54,18 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
         Chime chime = chimeList.get(position);
         holder.title.setText(chime.name);
 
+        if (holder.location != null)
+            if (chime.latitude >= 0)
+                holder.location.setText(chime.latitude + "," + chime.longitude);
+
+        if (holder.wifi_ssid != null)
+            if (!TextUtils.isEmpty(chime.ssid))
+                holder.wifi_ssid.setText(chime.ssid);
+
         if (chimeLayout == R.layout.layout_card_mixed) {
             // Set a random height for TextView
             holder.title.getLayoutParams().height = getRandomIntInRange(300, 100);
         }
-
-        //  holder.count.setText(album.getNumOfSongs() + " songs");
 
         // loading album cover using Glide library
       //  Glide.with(mContext).load(album.getThumbnail()).into(holder.thumbnail);

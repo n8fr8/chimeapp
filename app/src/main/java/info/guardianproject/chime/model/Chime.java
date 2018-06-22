@@ -17,7 +17,7 @@ public class Chime extends SugarRecord {
 
     public double latitude;
     public double longitude;
-    public float radius;
+    public float radius = 10;//default
 
     public String serviceUri;
     public String servicePackage;
@@ -27,4 +27,5 @@ public class Chime extends SugarRecord {
     public Date end;
 
     public Date lastSeen;
+    public boolean isNearby = false;
 }

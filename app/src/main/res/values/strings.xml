@@ -2,6 +2,17 @@
     <string name="app_name">Chime</string>
     <string name="title_home">Home</string>
     <string name="title_nearby">Nearby</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_dashboard">Guide</string>
+    <string name="title_notifications">Notify!</string>
+    <string name="warn_name_length">The name must have between 3 and 40 characters</string>
+    <string name="form_label_name">Name</string>
+    <string name="form_label_location">Location</string>
+    <string name="form_hint_name">Name for this chime</string>
+    <string name="form_hint_location">GPS location for this chime</string>
+    <string name="form_error_location">Please use a standard lat,lon geo format</string>
+    <string name="action_new_chime">New Chime</string>
+    <string name="form_label_network">Network</string>
+    <string name="form_label_service">Service</string>
+    <string name="form_hint_network">wifi network the chime is for</string>
+    <string name="form_hint_service">link or address for the service to use</string>
 </resources>
