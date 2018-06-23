@@ -15,7 +15,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
+        android:id="@+id/infobox"
         >
 <LinearLayout
     android:id="@+id/infoview"
@@ -43,12 +43,22 @@
 </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:padding="6dp"
         android:layout_below="@+id/infoview"
         android:orientation="horizontal"
-        android:gravity="right"
+        android:gravity="end"
         >
+
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_location_search"
+            android:tint="@color/primaryLight"
+            android:layout_margin="6dp"
+            android:id="@+id/action_map"
+            />
 
         <ImageView
             android:layout_width="24dp"
@@ -59,14 +69,6 @@
             android:id="@+id/action_share"
             />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_location_search"
-            android:tint="@color/primaryLight"
-            android:layout_margin="6dp"
-            android:id="@+id/action_connect"
-            />
 
     </LinearLayout>
     </RelativeLayout>

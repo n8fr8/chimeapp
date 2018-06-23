@@ -46,11 +46,13 @@ public class Chime extends SugarRecord {
 
         result.append(SCHEME).append("://");
 
-        try {
-            result.append(URLEncoder.encode(serviceUri,"UTF-8")).append("?");
-            result.append("name=").append(URLEncoder.encode(serviceUri,"UTF-8")).append("&");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        if (!TextUtils.isEmpty(name)) {
+            try {
+                result.append(URLEncoder.encode(name, "UTF-8")).append("?");
+                result.append("name=").append(URLEncoder.encode(name, "UTF-8")).append("&");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
 
         result.append("lat=").append(latitude).append("&");

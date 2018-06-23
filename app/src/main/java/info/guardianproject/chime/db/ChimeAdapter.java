@@ -5,6 +5,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
@@ -45,6 +47,7 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView title, location, wifi_ssid, service_uri;
         public ImageView ivShare, ivMap, ivConnect;
+        public View infobox;
 
         public MyViewHolder(View view) {
             super(view);
@@ -55,8 +58,7 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
             ivShare = view.findViewById(R.id.action_share);
             ivMap = view.findViewById(R.id.action_map);
             ivConnect = view.findViewById(R.id.action_connect);
-
-
+            infobox = view.findViewById(R.id.infobox);
         }
     }
 
@@ -154,7 +156,8 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
         {
             // Set a random height for TextView
             holder.title.getLayoutParams().height = getRandomIntInRange(300, 100);
-
+            if (holder.infobox != null)
+                holder.infobox.setBackgroundColor(getMatColor("700"));
         }
 
         if (holder.ivShare != null)
@@ -299,5 +302,20 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
         if (wifiManager.isWifiEnabled())
             lastWifiInfo = wifiManager.getConnectionInfo();
 
+    }
+
+    private int getMatColor(String typeColor)
+    {
+        int returnColor = Color.BLACK;
+        int arrayId = mContext.getResources().getIdentifier("mdcolor_" + typeColor, "array", mContext.getApplicationContext().getPackageName());
+
+        if (arrayId != 0)
+        {
+            TypedArray colors = mContext.getResources().obtainTypedArray(arrayId);
+            int index = (int) (Math.random() * colors.length());
+            returnColor = colors.getColor(index, Color.BLACK);
+            colors.recycle();
+        }
+        return returnColor;
     }
 }

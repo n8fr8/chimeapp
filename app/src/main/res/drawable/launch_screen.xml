@@ -10,7 +10,7 @@
     <item>
 
         <bitmap
-            android:src="@drawable/windchime"
+            android:src="@drawable/windchimesplash"
             android:gravity="center"/>
 
     </item>
