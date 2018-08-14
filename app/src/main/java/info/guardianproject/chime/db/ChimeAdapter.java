@@ -165,8 +165,6 @@ public class ChimeAdapter extends RecyclerView.Adapter<ChimeAdapter.MyViewHolder
             holder.ivShare.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
-
                     Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                     sharingIntent.setType("text/plain");
                     String ShareSub = mContext.getString(R.string.label_share_chime);

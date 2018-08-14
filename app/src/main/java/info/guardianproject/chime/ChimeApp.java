@@ -10,8 +10,6 @@ public class ChimeApp extends SugarApp {
     public void onCreate() {
         super.onCreate();
 
-        GeoManager.initLocation(getApplicationContext());
-        //GeoManager.buildGeoFences(this);
 
     }
 }

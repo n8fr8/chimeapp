@@ -7,6 +7,10 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +18,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -92,6 +97,20 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
                 chime = Chime.parseUri(intent.getStringExtra(Intent.EXTRA_TEXT));
             }
 
+            if (getIntent().getAction() != null) {
+                // tag received when app is not running and not in the foreground:
+                if (getIntent().getAction().equals(NfcAdapter.ACTION_NDEF_DISCOVERED)) {
+                    NdefMessage[] msgs = getNdefMessagesFromIntent(getIntent());
+                    NdefRecord record = msgs[0].getRecords()[0];
+                    byte[] payload = record.getPayload();
+
+                    String payloadString = new String(payload);
+                    chime = Chime.parseUri(payloadString);
+                    chime.save();
+                    finish();
+                }
+            }
+
             if (chime != null)
             {
                 if (!TextUtils.isEmpty(chime.ssid))
@@ -109,6 +128,33 @@ public class AddNewChimeActivity extends AppCompatActivity implements VerticalSt
             }
 
         }
+    }
+
+    /*
+     * **** READING MODE METHODS ****
+     */
+    NdefMessage[] getNdefMessagesFromIntent(Intent intent) {
+        // Parse the intent
+        NdefMessage[] msgs = null;
+        String action = intent.getAction();
+        if (action.equals(NfcAdapter.ACTION_TAG_DISCOVERED) || action.equals(NfcAdapter.ACTION_NDEF_DISCOVERED)) {
+            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            if (rawMsgs != null){
+                msgs = new NdefMessage[rawMsgs.length];
+                for (int i = 0; i < rawMsgs.length; i++) {
+                    msgs[i] = (NdefMessage) rawMsgs[i];
+                }
+
+            } else {
+                // Unknown tag type
+                byte[] empty = new byte[] {};
+                NdefRecord record = new NdefRecord(NdefRecord.TNF_UNKNOWN, empty, empty, empty);
+                NdefMessage msg = new NdefMessage(new NdefRecord[] { record });
+                msgs = new NdefMessage[] { msg };
+            }
+
+        }
+        return msgs;
     }
 
     @Override

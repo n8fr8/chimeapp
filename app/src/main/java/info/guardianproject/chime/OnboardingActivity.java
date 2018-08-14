@@ -31,7 +31,7 @@ public class OnboardingActivity extends AhoyOnboarderActivity {
         List<AhoyOnboarderCard> pages = new ArrayList<>();
 
         AhoyOnboarderCard ahoyOnboarderCard =
-                new AhoyOnboarderCard(getString(R.string.app_name), "Can you hear it? You are ready to join the Wind network!", R.mipmap.ic_launcher);
+                new AhoyOnboarderCard(getString(R.string.app_name), getString(R.string.onboarding_welcome), R.mipmap.ic_launcher);
         ahoyOnboarderCard.setBackgroundColor(R.color.black_transparent);
         ahoyOnboarderCard.setTitleColor(R.color.white);
         ahoyOnboarderCard.setDescriptionColor(R.color.grey_200);
@@ -41,7 +41,7 @@ public class OnboardingActivity extends AhoyOnboarderActivity {
 
         pages.add(ahoyOnboarderCard);
 
-        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_nearby), "Chime helps you discover and connect with nearby, off-grid services in your area", R.drawable.ic_nearby_white);
+        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_nearby), getString(R.string.onboarding_chime), R.drawable.ic_nearby_white);
         ahoyOnboarderCard.setBackgroundColor(R.color.black_transparent);
         ahoyOnboarderCard.setTitleColor(R.color.white);
         ahoyOnboarderCard.setDescriptionColor(R.color.grey_200);
@@ -51,7 +51,7 @@ public class OnboardingActivity extends AhoyOnboarderActivity {
 
         pages.add(ahoyOnboarderCard);
 
-        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_dashboard), "Save and share your discoveries with neighbors and strangers along the way", R.drawable.ic_dashboard_white_24dp);
+        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_dashboard), getString(R.string.onboarding_share), R.drawable.ic_dashboard_white_24dp);
         ahoyOnboarderCard.setBackgroundColor(R.color.black_transparent);
         ahoyOnboarderCard.setTitleColor(R.color.white);
         ahoyOnboarderCard.setDescriptionColor(R.color.grey_200);
@@ -61,7 +61,7 @@ public class OnboardingActivity extends AhoyOnboarderActivity {
 
         pages.add(ahoyOnboarderCard);
 
-        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_notifications), "Chime will let you know, when you've got a connection!", R.drawable.ic_notifications_white_24dp);
+        ahoyOnboarderCard = new AhoyOnboarderCard(getString(R.string.title_notifications), getString(R.string.onboarding_notify), R.drawable.ic_notifications_white_24dp);
         ahoyOnboarderCard.setBackgroundColor(R.color.black_transparent);
         ahoyOnboarderCard.setTitleColor(R.color.white);
         ahoyOnboarderCard.setDescriptionColor(R.color.grey_200);

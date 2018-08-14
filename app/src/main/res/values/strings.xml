@@ -27,4 +27,8 @@
     <string name="channel_description">Let\'s you know about nearby chimes</string>
     <string name="status_here">Here!</string>
     <string name="label_share_chime">Share chime via</string>
+    <string name="onboarding_welcome">Can you hear it? You are ready to join the Wind network!</string>
+    <string name="onboarding_chime">Chime helps you discover and connect with nearby, off-grid services in your area</string>
+    <string name="onboarding_share">Save and share your discoveries with neighbors and strangers along the way</string>
+    <string name="onboarding_notify">Chime will let you know, when you\'ve got a connection!</string>
 </resources>

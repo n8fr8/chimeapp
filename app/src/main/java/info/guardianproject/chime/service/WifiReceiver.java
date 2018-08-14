@@ -1,6 +1,9 @@
 package info.guardianproject.chime.service;
 
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -8,17 +11,21 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.Date;
 import java.util.List;
 
+import info.guardianproject.chime.R;
 import info.guardianproject.chime.model.Chime;
 import info.guardianproject.chime.model.ChimeEvent;
 
@@ -40,6 +47,9 @@ import info.guardianproject.chime.model.ChimeEvent;
 public class WifiReceiver extends BroadcastReceiver {
 
     private final static String TAG = WifiReceiver.class.getSimpleName();
+
+    private static final String ANDROID_CHANNEL_ID = "info.guardianproject.chime.service.Channel";
+    private static final int NOTIFICATION_ID = 555;
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -74,6 +84,24 @@ public class WifiReceiver extends BroadcastReceiver {
     public static class WifiActiveService extends Service {
 
         @Override
+        public void onCreate() {
+            super.onCreate();
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            CharSequence channelName = "Some Channel";
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel notificationChannel = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                notificationChannel = new NotificationChannel(ANDROID_CHANNEL_ID, channelName, importance);
+                notificationChannel.enableLights(false);
+                notificationChannel.enableVibration(false);
+                notificationManager.createNotificationChannel(notificationChannel);
+            }
+        }
+
+        @Override
         public int onStartCommand(Intent intent, int flags, int startId) {
             final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             // Need to wait a bit for the SSID to get picked up;
@@ -91,6 +119,24 @@ public class WifiReceiver extends BroadcastReceiver {
                     stopSelf();
                 }
             }, 5000);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Notification.Builder builder = new Notification.Builder(this, ANDROID_CHANNEL_ID)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentText("SmartTracker Running")
+                        .setAutoCancel(true);
+                Notification notification = builder.build();
+                startForeground(NOTIFICATION_ID, notification);
+            } else {
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentText("SmartTracker is Running...")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setAutoCancel(true);
+                Notification notification = builder.build();
+                startForeground(NOTIFICATION_ID, notification);
+            }
+
             return START_NOT_STICKY;
         }
 

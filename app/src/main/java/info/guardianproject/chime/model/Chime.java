@@ -94,7 +94,7 @@ public class Chime extends SugarRecord {
         Uri uri = Uri.parse(uriString);
         String protocol = uri.getScheme();
 
-        if (protocol != null && protocol.equals(SCHEME)) {
+        if (protocol != null && protocol.contains(SCHEME)) {
 
             chime = new Chime();
 

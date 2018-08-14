@@ -47,7 +47,13 @@ public class WifiJobService extends JobService {
         @Override
         protected JobParameters doInBackground(JobParameters... params) {
 
-            startService(new Intent(getApplicationContext(),WifiReceiver.WifiActiveService.class));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(new Intent(getApplicationContext(),WifiReceiver.WifiActiveService.class));
+            }
+            else
+            {
+                startService(new Intent(getApplicationContext(),WifiReceiver.WifiActiveService.class));
+            }
 
             return params[0];
         }

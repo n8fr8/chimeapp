@@ -30,7 +30,6 @@
         android:layout_height="wrap_content"
         android:textColor="@color/primaryLight"
         android:textAppearance="?android:attr/textAppearanceMedium"
-
         />
 
     <TextView
